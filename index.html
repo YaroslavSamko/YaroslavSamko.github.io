@@ -675,7 +675,7 @@
           <ul class="project-list">
 
             <li class="project-item active" data-filter-item data-category="automation & bots">
-              <a href="./assets/images/G6-TradingBot.png" target="_blank">
+              <a href="./assets/images/G6-TradingBot.png" class="portfolio-lightbox-link">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
@@ -692,7 +692,7 @@
             </li>
 
             <li class="project-item active" data-filter-item data-category="web development">
-              <a href="./assets/images/Lamay-Spa.png" target="_blank">
+              <a href="./assets/images/Lamay-Spa.png" class="portfolio-lightbox-link">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
@@ -709,7 +709,7 @@
             </li>
 
             <li class="project-item active" data-filter-item data-category="e-commerce">
-              <a href="./assets/images/Brooklyn.png" target="_blank">
+              <a href="./assets/images/Brooklyn.png" class="portfolio-lightbox-link">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
@@ -726,7 +726,7 @@
             </li>
 
             <li class="project-item active" data-filter-item data-category="web development">
-              <a href="./assets/images/A1-BarberShop.png" target="_blank">
+              <a href="./assets/images/A1-BarberShop.png" class="portfolio-lightbox-link">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
@@ -748,10 +748,16 @@
 
       </article>
 
+      <div class="modal-container" data-portfolio-modal>
+        <div class="overlay" data-portfolio-overlay></div>
+        <section class="testimonials-modal" style="padding: 15px; max-width: 900px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; box-shadow: none;">
+          <button class="modal-close-btn" data-portfolio-close-btn style="position: absolute; top: -10px; right: 0px; background: var(--onyx); color: var(--orange-yellow-crayola); border-radius: 10px; padding: 10px; z-index: 10;">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+          <img src="" alt="Project Image" id="portfolio-modal-img" style="width: 100%; max-height: 85vh; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); object-fit: contain;">
+        </section>
+      </div>
 
-
-
-     
 
 
       <article class="contact" data-page="contact">
@@ -772,7 +778,7 @@
 
           <h3 class="h3 form-title">Contact Form</h3>
 
-          <form action="https://formspree.io/f/xvzlvben" method="POST" class="form" data-form></form>
+          <form class="form" id="telegram-form" data-form>
 
             <div class="input-wrapper">
               <input type="text" name="fullname" class="form-input" placeholder="Full name" required data-form-input>
@@ -784,10 +790,18 @@
 
             <button class="form-btn" type="submit" disabled data-form-btn>
               <ion-icon name="paper-plane"></ion-icon>
-              <span>Send Message</span>
+              <span id="btn-text">Send Message</span>
             </button>
 
           </form>
+
+          <div id="success-message" style="display: none; text-align: center; margin-top: 30px; animation: scaleUp 0.5s ease forwards;">
+            <div style="font-size: 60px; color: #ffdb70; margin-bottom: 15px;">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+            </div>
+            <h3 style="color: white; font-size: 24px; font-weight: 500;">Message Sent!</h3>
+            <p style="color: var(--light-gray); margin-top: 5px;">I'll get back to you soon.</p>
+          </div>
 
         </section>
 
@@ -806,6 +820,84 @@
 
   <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+
+  <script>
+    // ==========================================
+    // 1. ОТПРАВКА ФОРМЫ НАПРЯМУЮ В ТЕЛЕГРАМ
+    // ==========================================
+    const tgForm = document.getElementById('telegram-form');
+    const successMsg = document.getElementById('success-message');
+    const btnText = document.getElementById('btn-text');
+
+    // !!! ВСТАВЬ СЮДА ДАННЫЕ СВОЕГО БОТА !!!
+    const BOT_TOKEN = '8605440164:AAFxes_6FQpfNseyEfuzMqTDmVacTOn8Ors'; 
+    const CHAT_ID = '8371135844';
+
+    tgForm.addEventListener('submit', function(e) {
+      e.preventDefault(); // Останавливаем перезагрузку
+
+      const name = tgForm.querySelector('[name="fullname"]').value;
+      const email = tgForm.querySelector('[name="email"]').value;
+      const message = tgForm.querySelector('[name="message"]').value;
+
+      // Текст сообщения, который придет в ТГ
+      const text = `🔥 <b>Новая заявка с сайта!</b>\n\n👤 <b>Имя:</b> ${name}\n📧 <b>Email:</b> ${email}\n💬 <b>Сообщение:</b> ${message}`;
+
+      // Меняем текст кнопки на загрузку
+      const originalText = btnText.innerText;
+      btnText.innerText = 'Sending...';
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: text,
+          parse_mode: 'HTML'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          // Прячем форму, показываем галочку
+          tgForm.style.display = 'none';
+          successMsg.style.display = 'block';
+        } else {
+          alert('Ошибка отправки! Проверь BOT_TOKEN и CHAT_ID.');
+          btnText.innerText = originalText;
+        }
+      })
+      .catch(err => {
+        alert('Ошибка сети.');
+        btnText.innerText = originalText;
+      });
+    });
+
+    // ==========================================
+    // 2. ОТКРЫТИЕ ФОТО ПОРТФОЛИО ПРЯМО НА САЙТЕ
+    // ==========================================
+    const portfolioLinks = document.querySelectorAll('.portfolio-lightbox-link');
+    const portfolioModal = document.querySelector('[data-portfolio-modal]');
+    const portfolioModalImg = document.getElementById('portfolio-modal-img');
+    const portfolioCloseBtn = document.querySelector('[data-portfolio-close-btn]');
+    const portfolioOverlay = document.querySelector('[data-portfolio-overlay]');
+
+    // Открытие
+    portfolioLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault(); // Запрещаем открытие в новой вкладке
+        portfolioModalImg.src = this.getAttribute('href'); // Берем путь картинки
+        portfolioModal.classList.add('active'); // Показываем окно
+      });
+    });
+
+    // Закрытие
+    const closePortfolioModal = () => portfolioModal.classList.remove('active');
+    portfolioCloseBtn.addEventListener('click', closePortfolioModal);
+    portfolioOverlay.addEventListener('click', closePortfolioModal);
+
+  </script>
 
 </body>
 
