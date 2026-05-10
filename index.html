@@ -785,6 +785,8 @@
 
               <input type="email" name="email" class="form-input" placeholder="Email address" required data-form-input>
             </div>
+            
+            <input type="text" name="telegram" class="form-input" placeholder="Telegram username (optional)" style="margin-bottom: 25px;" data-form-input>
 
             <textarea name="message" class="form-input" placeholder="Your Message" required data-form-input></textarea>
 
@@ -800,7 +802,7 @@
               <ion-icon name="checkmark-circle-outline"></ion-icon>
             </div>
             <h3 style="color: white; font-size: 24px; font-weight: 500;">Message Sent!</h3>
-            <p style="color: var(--light-gray); margin-top: 5px;">I'll get back to you soon.</p>
+            <p style="color: var(--light-gray); margin-top: 5px;">Data saved to CRM and sent to Telegram.</p>
           </div>
 
         </section>
@@ -824,53 +826,36 @@
 
   <script>
     // ==========================================
-    // 1. ОТПРАВКА ФОРМЫ НАПРЯМУЮ В ТЕЛЕГРАМ
+    // 1. ОТПРАВКА ФОРМЫ ЧЕРЕЗ GOOGLE APPS SCRIPT
     // ==========================================
     const tgForm = document.getElementById('telegram-form');
     const successMsg = document.getElementById('success-message');
     const btnText = document.getElementById('btn-text');
 
-    // !!! ВСТАВЬ СЮДА ДАННЫЕ СВОЕГО БОТА !!!
-    const BOT_TOKEN = '8605440164:AAFxes_6FQpfNseyEfuzMqTDmVacTOn8Ors'; 
-    const CHAT_ID = '8371135844';
+    const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbzwR7joL_BInSX0efpKHmc57HRIQZ778JQR-154ijV2AmVFw1c43RFQ7RCB8EQN7EOA9A/exec'; 
 
     tgForm.addEventListener('submit', function(e) {
-      e.preventDefault(); // Останавливаем перезагрузку
+      e.preventDefault(); // Останавливаем перезагрузку страницы
 
-      const name = tgForm.querySelector('[name="fullname"]').value;
-      const email = tgForm.querySelector('[name="email"]').value;
-      const message = tgForm.querySelector('[name="message"]').value;
-
-      // Текст сообщения, который придет в ТГ
-      const text = `🔥 <b>Новая заявка с сайта!</b>\n\n👤 <b>Имя:</b> ${name}\n📧 <b>Email:</b> ${email}\n💬 <b>Сообщение:</b> ${message}`;
-
-      // Меняем текст кнопки на загрузку
-      const originalText = btnText.innerText;
       btnText.innerText = 'Sending...';
 
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      // Собираем все данные из формы, включая новое поле Telegram
+      const params = new URLSearchParams(new FormData(tgForm));
+
+      fetch(GOOGLE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: CHAT_ID,
-          text: text,
-          parse_mode: 'HTML'
-        })
+        mode: 'no-cors', // Обязательный параметр для Google Script
+        body: params
       })
-      .then(res => res.json())
-      .then(data => {
-        if (data.ok) {
-          // Прячем форму, показываем галочку
-          tgForm.style.display = 'none';
-          successMsg.style.display = 'block';
-        } else {
-          alert('Ошибка отправки! Проверь BOT_TOKEN и CHAT_ID.');
-          btnText.innerText = originalText;
-        }
+      .then(() => {
+        // Успешная отправка
+        tgForm.style.display = 'none';
+        successMsg.style.display = 'block';
+        tgForm.reset();
       })
       .catch(err => {
-        alert('Ошибка сети.');
-        btnText.innerText = originalText;
+        alert('Error sending message. Please try again.');
+        btnText.innerText = 'Send Message';
       });
     });
 
